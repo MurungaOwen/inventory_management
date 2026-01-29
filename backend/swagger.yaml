@@ -1,0 +1,565 @@
+openapi: 3.0.0
+info:
+  title: Hardware Inventory & Sales API
+  description: API documentation for the Hardware POS system.
+  version: "1.0.0"
+servers:
+  - url: /api/v1
+tags:
+  - name: auth
+    description: Authentication endpoints
+  - name: users
+    description: User management
+  - name: products
+    description: Product catalog
+  - name: inventory
+    description: Stock management
+  - name: sales
+    description: Sales and transactions
+  - name: reports
+    description: Business reports
+  - name: notifications
+    description: System notifications
+
+paths:
+  # Auth
+  /auth/signup:
+    post:
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUser"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+                  message: { type: string }
+        400:
+          description: Bad Request
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login to the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginUser"
+      responses:
+        200:
+          description: OK
+          headers:
+            Set-Cookie:
+              description: Authorization cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+                  message: { type: string }
+        401:
+          description: Unauthorized
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout from the system
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+
+  # Users
+  /users:
+    get:
+      tags: [users]
+      summary: Find All Users
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  message: { type: string }
+    post:
+      tags: [users]
+      summary: Add User
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUser"
+      responses:
+        201:
+          description: Created
+  /users/{id}:
+    get:
+      tags: [users]
+      summary: Find User By Id
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+                  message: { type: string }
+    put:
+      tags: [users]
+      summary: Update User By Id
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUser"
+      responses:
+        200:
+          description: OK
+    delete:
+      tags: [users]
+      summary: Delete User By Id
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: No Content
+
+  # Products
+  /products:
+    get:
+      tags: [products]
+      summary: List all products
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  message: { type: string }
+    post:
+      tags: [products]
+      summary: Create a new product
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProduct"
+      responses:
+        201:
+          description: Created
+  /products/{id}:
+    get:
+      tags: [products]
+      summary: Get product by ID
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Product"
+                  message: { type: string }
+    put:
+      tags: [products]
+      summary: Update product
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProduct"
+      responses:
+        200:
+          description: OK
+    delete:
+      tags: [products]
+      summary: Delete product
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+  # Inventory
+  /inventory:
+    get:
+      tags: [inventory]
+      summary: Get all inventory items
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+  /inventory/low-stock:
+    get:
+      tags: [inventory]
+      summary: Get low stock items
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+  /inventory/adjust:
+    post:
+      tags: [inventory]
+      summary: Adjust stock manually
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdjustStock"
+      responses:
+        200:
+          description: OK
+  /inventory/threshold:
+    put:
+      tags: [inventory]
+      summary: Update reorder threshold
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateThreshold"
+      responses:
+        200:
+          description: OK
+
+  # Sales
+  /sales:
+    get:
+      tags: [sales]
+      summary: Get sales history
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+    post:
+      tags: [sales]
+      summary: Create a new sale
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSale"
+      responses:
+        201:
+          description: Created
+  /sales/{id}:
+    get:
+      tags: [sales]
+      summary: Get sale details
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+  # Reports
+  /reports/daily:
+    get:
+      tags: [reports]
+      summary: Get daily sales report
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+  /reports/weekly:
+    get:
+      tags: [reports]
+      summary: Get weekly sales report
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+  /reports/monthly:
+    get:
+      tags: [reports]
+      summary: Get monthly sales report
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+
+  # Notifications
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: Get user notifications
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+  /notifications/unread-count:
+    get:
+      tags: [notifications]
+      summary: Get unread notifications count
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+  /notifications/{id}/read:
+    put:
+      tags: [notifications]
+      summary: Mark notification as read
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Authorization
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string }
+        fullName: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [Owner, Manager, Cashier] }
+    CreateUser:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email: { type: string }
+        password: { type: string }
+        fullName: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [Owner, Manager, Cashier] }
+    UpdateUser:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+        fullName: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [Owner, Manager, Cashier] }
+    LoginUser:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    Product:
+      type: object
+      properties:
+        id: { type: string }
+        sku: { type: string }
+        name: { type: string }
+        category: { type: string }
+        supplier: { type: string }
+        unit: { type: string }
+        costPrice: { type: number }
+        sellingPrice: { type: number }
+    CreateProduct:
+      type: object
+      required: [sku, name, category, unit, costPrice, sellingPrice]
+      properties:
+        sku: { type: string }
+        name: { type: string }
+        category: { type: string }
+        supplier: { type: string }
+        unit: { type: string, enum: [pcs, bag, liter, kg, box, roll, meter] }
+        costPrice: { type: number }
+        sellingPrice: { type: number }
+        description: { type: string }
+    UpdateProduct:
+      type: object
+      properties:
+        sku: { type: string }
+        name: { type: string }
+        category: { type: string }
+        supplier: { type: string }
+        unit: { type: string, enum: [pcs, bag, liter, kg, box, roll, meter] }
+        costPrice: { type: number }
+        sellingPrice: { type: number }
+        description: { type: string }
+
+    AdjustStock:
+      type: object
+      required: [productId, quantity, type]
+      properties:
+        productId: { type: string, format: uuid }
+        quantity: { type: number }
+        type: { type: string, enum: [in, out] }
+    UpdateThreshold:
+      type: object
+      required: [productId, threshold]
+      properties:
+        productId: { type: string, format: uuid }
+        threshold: { type: number }
+
+    CreateSale:
+      type: object
+      required: [paymentMethod, items]
+      properties:
+        paymentMethod: { type: string, enum: [Cash, Mobile Money] }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItem"
+    SaleItem:
+      type: object
+      required: [productId, quantity, unitPrice]
+      properties:
+        productId: { type: string, format: uuid }
+        quantity: { type: number }
+        unitPrice: { type: number }
