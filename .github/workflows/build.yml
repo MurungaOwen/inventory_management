@@ -1,0 +1,99 @@
+name: CI and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+
+jobs:
+  build:
+    name: Build backend and frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install and Build Frontend
+        if: ${{ always() }}
+        run: |
+          if [ -d frontend ] && [ -f frontend/package.json ]; then
+            cd frontend
+            npm ci
+            npm run build
+            cd ..
+          else
+            echo "Frontend directory or package.json not found"
+          fi
+
+      - name: Install and Build Backend
+        if: ${{ always() }}
+        run: |
+          if [ -d backend ] && [ -f backend/package.json ]; then
+            cd backend
+            npm ci
+            npm run build
+            cd ..
+          else
+            echo "Backend directory or package.json not found"
+          fi
+
+      - name: Upload Build Logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            frontend-build.log
+            backend-build.log
+
+      - name: Fail Workflow on Build Errors
+        run: |
+          if [ -f build-failed-status ] && [ "$(cat build-failed-status)" != "0" ]; then
+            echo "Build failed. Check logs."
+            exit 1
+
+  deploy:
+    name: Deploy Frontend to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ github.ref == 'refs/heads/main' && needs.build.result == 'success' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Build Frontend for Deployment
+        run: |
+          if [ -d frontend ] && [ -f frontend/package.json ]; then
+            cd frontend
+            npm ci
+            npm run build
+            cd ..
+          else
+            echo "Frontend directory or package.json not found"
+            exit 1
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: frontend/build
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
