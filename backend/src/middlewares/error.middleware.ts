@@ -3,7 +3,7 @@ import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { ZodError } from "zod";
 import { NODE_ENV } from "@config/env";
 import { HttpException } from "@exceptions/httpException";
-// import { logger } from "@utils/logger";
+import { logger } from "@utils/logger";
 
 type ValidationIssue = { path: string; message: string };
 type HttpExceptionWithData = HttpException & { data?: unknown };
@@ -72,9 +72,9 @@ export const ErrorMiddleware = (
   if (res.headersSent) return _next(httpErr);
 
   const stack = extractStack(httpErr);
-  // logger.error(
-  //   `[${req.method}] ${req.originalUrl} | ${status} | ${message}${stack ? `\n${stack}` : ""}`,
-  // );
+  logger.error(
+    `[${req.method}] ${req.originalUrl} | ${status} | ${message}${stack ? `\n${stack}` : ""}`,
+  );
 
   const body: ErrorResponseBody = {
     success: false,

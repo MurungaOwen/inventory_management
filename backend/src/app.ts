@@ -5,11 +5,13 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import hpp from "hpp";
+import morgan from "morgan";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import {
   NODE_ENV,
   PORT,
+  LOG_FORMAT,
   CREDENTIALS,
   CORS_ORIGIN_LIST,
   API_SERVER_URL,
@@ -17,6 +19,7 @@ import {
 import { Routes } from "@interfaces/routes.interface";
 import { ErrorMiddleware } from "@middlewares/error.middleware";
 import { NotFoundMiddleware } from "@middlewares/notFound.middleware";
+import { logger, stream } from "@utils/logger";
 
 class App {
   public app: express.Application;
@@ -37,10 +40,10 @@ class App {
 
   public listen() {
     const server = this.app.listen(this.port, () => {
-      console.log(`=================================`);
-      console.log(`======= ENV: ${this.env} =======`);
-      console.log(`🚀 App listening on the port ${this.port}`);
-      console.log(`=================================`);
+      logger.info(`=================================`);
+      logger.info(`======= ENV: ${this.env} =======`);
+      logger.info(`🚀 App listening on the port ${this.port}`);
+      logger.info(`=================================`);
     });
 
     return server;
@@ -68,7 +71,7 @@ class App {
       }),
     );
 
-    // this.app.use(morgan(LOG_FORMAT || "dev", { stream }));
+    this.app.use(morgan(LOG_FORMAT || "dev", { stream }));
 
     // CORS
     const allowedOrigins =
