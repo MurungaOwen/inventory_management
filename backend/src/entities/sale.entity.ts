@@ -1,7 +1,7 @@
-import crypto from 'crypto';
-import { SaleItem, type SaleItemPersistenceData } from './sale-item.entity';
+import crypto from "crypto";
+import { SaleItem, type SaleItemPersistenceData } from "./sale-item.entity";
 
-export type PaymentMethod = 'Cash' | 'Mobile Money';
+export type PaymentMethod = "Cash" | "Mobile Money";
 
 export interface SalePersistenceData {
   id: string;
@@ -35,7 +35,8 @@ export class Sale {
     paymentMethod: PaymentMethod,
     itemsData: SaleItemCreateData[],
   ): Sale {
-    if (itemsData.length === 0) throw new Error('Sale must have at least one item');
+    if (itemsData.length === 0)
+      throw new Error("Sale must have at least one item");
 
     const id = crypto.randomUUID();
     const items = itemsData.map((d) =>
@@ -44,11 +45,20 @@ export class Sale {
     const totalAmount = items.reduce((sum, item) => sum + item.subtotal, 0);
     const saleNumber = `SALE-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
 
-    return new Sale(id, saleNumber, totalAmount, paymentMethod, cashierId, items);
+    return new Sale(
+      id,
+      saleNumber,
+      totalAmount,
+      paymentMethod,
+      cashierId,
+      items,
+    );
   }
 
   static fromPersistence(data: SalePersistenceData): Sale {
-    const items = data.items ? data.items.map((i) => SaleItem.fromPersistence(i)) : [];
+    const items = data.items
+      ? data.items.map((i) => SaleItem.fromPersistence(i))
+      : [];
     return new Sale(
       data.id,
       data.saleNumber,

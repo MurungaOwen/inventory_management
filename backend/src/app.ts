@@ -105,7 +105,7 @@ class App {
                   upgradeInsecureRequests: [],
                 },
               }
-            : false, // CSP hot reload 
+            : false, // CSP hot reload
         referrerPolicy: { policy: "no-referrer" },
       }),
     );

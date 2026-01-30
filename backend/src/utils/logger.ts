@@ -7,10 +7,8 @@ const isProd = NODE_ENV === "production";
 const logRoot = LOG_DIR || "logs";
 const logLevel = LOG_LEVEL || "info";
 
-
-const projectRoot = process.cwd(); 
+const projectRoot = process.cwd();
 const logDir = join(projectRoot, logRoot);
-
 
 try {
   if (!existsSync(logDir)) {
@@ -35,18 +33,18 @@ const errorFile = join(logDir, "error");
 const transport = pino.transport({
   targets: isProd
     ? [
-        // prod: 
+        // prod:
         {
           target: "pino-roll",
           level: logLevel,
           options: {
-            file: prodFile, 
+            file: prodFile,
             frequency: "daily", // 'daily' | 'hourly' | number(ms)
             size: "50m",
             dateFormat: "yyyy-MM-dd",
             extension: ".log",
             mkdir: true,
-            symlink: true, // current.log 
+            symlink: true, // current.log
             limit: { count: 30 },
           },
         },
@@ -67,7 +65,7 @@ const transport = pino.transport({
         },
       ]
     : [
-        // dev: 
+        // dev:
         {
           target: "pino-pretty",
           level: logLevel,
@@ -95,7 +93,7 @@ const transport = pino.transport({
       ],
 });
 
-// ── Logger 
+// ── Logger
 export const logger = pino(
   {
     level: logLevel,

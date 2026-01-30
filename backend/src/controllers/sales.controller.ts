@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
-import { injectable, inject } from 'tsyringe';
-import { SalesService } from '@services/sales.service';
-import { RequestWithUser } from '@interfaces/auth.interface';
-import { asyncHandler } from '@utils/asyncHandler';
+import { Request, Response } from "express";
+import { injectable, inject } from "tsyringe";
+import { SalesService } from "@services/sales.service";
+import { RequestWithUser } from "@interfaces/auth.interface";
+import { asyncHandler } from "@utils/asyncHandler";
 
 @injectable()
 export class SalesController {
@@ -13,8 +13,12 @@ export class SalesController {
     const userReq = req as RequestWithUser;
     const cashierId = userReq.user.id;
 
-    const sale = await this.salesService.createSale(cashierId, paymentMethod, items);
-    res.status(201).json({ data: sale.toPersistence(), message: 'created' });
+    const sale = await this.salesService.createSale(
+      cashierId,
+      paymentMethod,
+      items,
+    );
+    res.status(201).json({ data: sale.toPersistence(), message: "created" });
   });
 
   public getSalesHistory = asyncHandler(async (req: Request, res: Response) => {
@@ -24,12 +28,14 @@ export class SalesController {
       endDate: endDate ? new Date(endDate as string) : undefined,
       cashierId: cashierId ? String(cashierId) : undefined,
     });
-    res.status(200).json({ data: sales.map((s) => s.toPersistence()), message: 'findAll' });
+    res
+      .status(200)
+      .json({ data: sales.map((s) => s.toPersistence()), message: "findAll" });
   });
 
   public getSaleById = asyncHandler(async (req: Request, res: Response) => {
-    const saleId = req.params.id;
+    const saleId = req.params.id as string; // Ensure saleId is a string
     const sale = await this.salesService.getSaleById(saleId);
-    res.status(200).json({ data: sale.toPersistence(), message: 'findOne' });
+    res.status(200).json({ data: sale.toPersistence(), message: "findOne" });
   });
 }

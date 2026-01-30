@@ -1,25 +1,39 @@
-import { singleton } from 'tsyringe';
-import { Sale, type SalePersistenceData } from '@entities/sale.entity';
+import { singleton } from "tsyringe";
+import { Sale, type SalePersistenceData } from "@entities/sale.entity";
 //import { SaleItem } from '@entities/sale-item.entity';
-import { query, transaction } from '@config/db.config';
+import { query, transaction } from "@config/db.config";
 
 export interface ISalesRepository {
-  findAll(params?: { startDate?: Date; endDate?: Date; cashierId?: string }): Promise<Sale[]>;
+  findAll(params?: {
+    startDate?: Date;
+    endDate?: Date;
+    cashierId?: string;
+  }): Promise<Sale[]>;
   findById(id: string): Promise<Sale | undefined>;
   save(sale: Sale): Promise<Sale>;
   getSalesStats(startDate: Date, endDate: Date): Promise<any>;
   getDailyBreakdown(startDate: Date, endDate: Date): Promise<any[]>;
   getPaymentMethodBreakdown(startDate: Date, endDate: Date): Promise<any[]>;
-  getTopProducts(startDate: Date, endDate: Date, limit?: number): Promise<any[]>;
+  getTopProducts(
+    startDate: Date,
+    endDate: Date,
+    limit?: number,
+  ): Promise<any[]>;
   getCashierPerformance(startDate: Date, endDate: Date): Promise<any[]>;
 }
 
 @singleton()
 export class SalesRepository implements ISalesRepository {
-  private async mapRowToSale(row: any, fetchItems: boolean = false): Promise<Sale> {
+  private async mapRowToSale(
+    row: any,
+    fetchItems: boolean = false,
+  ): Promise<Sale> {
     let items: any[] = [];
     if (fetchItems) {
-      const itemsResult = await query('SELECT * FROM sale_items WHERE sale_id = $1', [row.id]);
+      const itemsResult = await query(
+        "SELECT * FROM sale_items WHERE sale_id = $1",
+        [row.id],
+      );
       items = itemsResult.rows.map((itemRow) => ({
         id: itemRow.id,
         saleId: itemRow.sale_id,
@@ -48,7 +62,7 @@ export class SalesRepository implements ISalesRepository {
     endDate?: Date;
     cashierId?: string;
   }): Promise<Sale[]> {
-    let sql = 'SELECT * FROM sales WHERE 1=1';
+    let sql = "SELECT * FROM sales WHERE 1=1";
     const values: any[] = [];
     let paramIndex = 1;
 
@@ -67,18 +81,20 @@ export class SalesRepository implements ISalesRepository {
       values.push(params.cashierId);
     }
 
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
 
     const result = await query(sql, values);
-    
+
     // For list view, we might not need items, but let's fetch them for now or optimize later
     // To avoid N+1, we could fetch all items in one go, but for simplicity:
-    const sales = await Promise.all(result.rows.map((row) => this.mapRowToSale(row, true)));
+    const sales = await Promise.all(
+      result.rows.map((row) => this.mapRowToSale(row, true)),
+    );
     return sales;
   }
 
   async findById(id: string): Promise<Sale | undefined> {
-    const result = await query('SELECT * FROM sales WHERE id = $1', [id]);
+    const result = await query("SELECT * FROM sales WHERE id = $1", [id]);
     if (result.rows.length === 0) return undefined;
     return this.mapRowToSale(result.rows[0], true);
   }
@@ -151,14 +167,17 @@ export class SalesRepository implements ISalesRepository {
       [startDate, endDate],
     );
     return result.rows.map((row) => ({
-      date: new Date(row.date).toISOString().split('T')[0],
+      date: new Date(row.date).toISOString().split("T")[0],
       transactionCount: parseInt(row.transaction_count),
       revenue: parseFloat(row.revenue),
       averageSale: parseFloat(row.average_sale),
     }));
   }
 
-  async getPaymentMethodBreakdown(startDate: Date, endDate: Date): Promise<any[]> {
+  async getPaymentMethodBreakdown(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<any[]> {
     const result = await query(
       `SELECT 
          payment_method,
@@ -177,7 +196,11 @@ export class SalesRepository implements ISalesRepository {
     }));
   }
 
-  async getTopProducts(startDate: Date, endDate: Date, limit: number = 10): Promise<any[]> {
+  async getTopProducts(
+    startDate: Date,
+    endDate: Date,
+    limit: number = 10,
+  ): Promise<any[]> {
     const result = await query(
       `SELECT 
          p.id,

@@ -30,7 +30,6 @@ const routes = [
 // API prefix
 const appInstance = new App(routes);
 
-
 const server = appInstance.listen();
 
 // Graceful Shutdown
